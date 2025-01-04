@@ -1,11 +1,28 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
-    color: #333;
-    margin: 0;
-    padding: 20px;
   }
-  
-  h1 {
-    color: #007BFF;
-  }
+
+#my-canvas {
+    width: 800px; /* Feste Breite */
+    height: 800px; /* Feste Höhe */
+    
+}
+
+#container {
+  display: flex; /* Canvas und user-tools nebeneinander */
+  gap: 20px; /* Abstand zwischen Canvas und matrix-container*/
+}
+
+#matrix-container {
+ display: grid;
+ gap: 20px;
+}
+
+
+#matrix-container input {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  font-size: 12px;
+}

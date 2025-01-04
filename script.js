@@ -6,7 +6,10 @@ const dt = 0.01; //DeltaZeit zwischen Frames
 const frictionHalfLife = 0.02; //Halbwertszeit der Reibung
 const rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
 const m = 6; //Anzahl Farben
+
 const matrix = makeRandomMatrix();
+createMatrixUserInterface(m);
+
 const forceFactor = 20; //Verstärkungsfaktor der Kraft
 
 const frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
@@ -21,6 +24,28 @@ function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
         rows.push(row);
     }
     return rows;
+}
+
+function createMatrixUserInterface(size) { //matrix mit m Reihen und m Spalten erstellen auf Webseite 
+    const matrixContainer = document.getElementById("matrix-container");
+
+    matrixContainer.innerHTML = ""; //Matrix Container leeren
+    matrixContainer.style.gridTemplateColumns = `repeat(${size}, 30px)`; // Spaltenanzahl abhängig von anzahl Farben
+ 
+
+    for (let i = 0; i < size; i++){ //Reihen
+        for (let j = 0; j < size; j++) { //Spalten
+            const input = document.createElement("input");
+            input.type = "number"; //Der Input soll eine Zahl zwischen -1 und 1 sein
+            input.min = "-1";
+            input.max = "1";
+            input.step = "0.1";
+            input.value = "0"; //Wert am Anfang
+            input.id = `reihe-${i}-spalte-${j}`;//Id hinzufügen, damit man sich auf diese Zelle beziehen kann
+            matrixContainer.appendChild(input);
+        }
+
+    }
 }
 
 //Arrays für Partikeleigenschaften
@@ -78,7 +103,7 @@ function updateParticles() {
 
             const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln aber nicht hoch 2!
             if (r > 0 && r < rMax) {
-                const f = force(r / rMax, matrix[colors[i]][colors[j]]); //Wieso r/ rMax???????
+                const f = force(r / rMax, matrix[colors[i]][colors[j]]);
                 totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
                 totalForceY += (ry / r) * f;
             }
@@ -111,7 +136,7 @@ function updateParticles() {
 //Berechnung der Kraft abhängig vom Abstand r und dem Anziehungsfaktor a
 function force(r, a) {
     const equilibrium = 0.2; //equilibrium = Der Punkt, bei dem die Kraft im Gleichgewicht ist also f = 0 zwischen abstossend und anziehend
-    if (r < equilibrium) {
+    if (r < equilibrium) { //abstossend
         return r / equilibrium - 1;
     } else if (equilibrium < r && r < 1) {
         return a * (1 - Math.abs(2 * r - 1 - equilibrium) / (1 - equilibrium));
