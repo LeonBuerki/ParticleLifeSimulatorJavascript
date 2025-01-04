@@ -8,7 +8,8 @@ const rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
 const m = 4; //Anzahl Farben
 
 const matrix = makeRandomMatrix();
-createMatrixUserInterface(m);
+createMatrixUserInterface(m, matrix);
+console.log(matrix)
 
 const forceFactor = 20; //Verstärkungsfaktor der Kraft
 
@@ -19,14 +20,14 @@ function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
     for (let i = 0; i < m; i++) {
         const row = [];
         for (let j = 0; j < m; j++) {
-            row.push(Math.random() * 2 - 1); //Wert zwischen 1 und -1
+            row.push(Math.round((Math.random() * 2 - 1)*100)/100); //Wert zwischen 1 und -1
         }
         rows.push(row);
     }
     return rows;
 }
 
-function createMatrixUserInterface(size) { //matrix mit m Reihen und m Spalten anzeigen auf Webseite 
+function createMatrixUserInterface(size, randomMatrix) { //matrix mit m Reihen und m Spalten anzeigen auf Webseite, welche mit Random Zahlen gefüllt ist
     const matrixContainer = document.getElementById("matrix-container");
     const colorRowTop = document.getElementById("color-row-top");
 
@@ -40,7 +41,7 @@ function createMatrixUserInterface(size) { //matrix mit m Reihen und m Spalten a
      for (let i = 0; i < size; i++) {
         const colorBox = document.createElement("div");
         colorBox.id = "color-square";
-        colorBox.style.backgroundColor = `hsl(${360 * (i / size)}, 100%, 50%)`;
+        colorBox.style.backgroundColor = `hsl(${360 * (i / size)}, 100%, 50%)`; //Gleiche Farbe wie beim Zeichnen der Partikel
         colorRowTop.appendChild(colorBox);
     }
 
@@ -58,11 +59,19 @@ function createMatrixUserInterface(size) { //matrix mit m Reihen und m Spalten a
             input.min = "-1";
             input.max = "1";
             input.step = "0.1";
-            input.value = "0"; //Wert am Anfang
+            input.value = randomMatrix[i][j]; //Wert der randomMatrix
             input.id = `reihe-${i}-spalte-${j}`;//Id hinzufügen, damit man sich auf diese Zelle beziehen kann
             matrixContainer.appendChild(input);
-        }
 
+            // Event-Listener für Änderungen im Input-Feld
+            input.addEventListener("input", (event) => {
+                let newValue = parseFloat(event.target.value); //Wert im Feld lesen und in Float umwandeln
+                if (isNaN(newValue)) { //Wenn ungültig z.B. Buchstabe, dann soll der Wert 0 sein
+                    newValue = 0;
+                } 
+                randomMatrix[i][j] = newValue; // Matrix aktualisieren
+            });
+        }
     }
 }
 
