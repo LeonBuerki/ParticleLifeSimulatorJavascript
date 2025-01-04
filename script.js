@@ -5,7 +5,7 @@ const n = 1000; //Anzahl Partikel
 const dt = 0.01; //DeltaZeit zwischen Frames
 const frictionHalfLife = 0.02; //Halbwertszeit der Reibung
 const rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
-const m = 6; //Anzahl Farben
+const m = 4; //Anzahl Farben
 
 const matrix = makeRandomMatrix();
 createMatrixUserInterface(m);
@@ -26,14 +26,32 @@ function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
     return rows;
 }
 
-function createMatrixUserInterface(size) { //matrix mit m Reihen und m Spalten erstellen auf Webseite 
+function createMatrixUserInterface(size) { //matrix mit m Reihen und m Spalten anzeigen auf Webseite 
     const matrixContainer = document.getElementById("matrix-container");
+    const colorRowTop = document.getElementById("color-row-top");
 
-    matrixContainer.innerHTML = ""; //Matrix Container leeren
-    matrixContainer.style.gridTemplateColumns = `repeat(${size}, 30px)`; // Spaltenanzahl abhängig von anzahl Farben
- 
+    matrixContainer.innerHTML = ""; //Container leeren
+    colorRowTop.innerHTML = "";
+    
+    matrixContainer.style.gridTemplateColumns = `repeat(${size + 1}, 40px)`; // Spaltenanzahl abhängig von anzahl Farben, size+1, weil es noch 1 box für Farbkästchen links hinzurechnen muss
+    colorRowTop.style.gridTemplateColumns = `repeat(${size}, 40px)`; 
+
+     // Farbenkästchen für die horizontale Reihe oben erstellen
+     for (let i = 0; i < size; i++) {
+        const colorBox = document.createElement("div");
+        colorBox.id = "color-square";
+        colorBox.style.backgroundColor = `hsl(${360 * (i / size)}, 100%, 50%)`;
+        colorRowTop.appendChild(colorBox);
+    }
 
     for (let i = 0; i < size; i++){ //Reihen
+
+         // Farbkästchen links erstellen
+         const colorBox = document.createElement("div");
+         colorBox.id = "color-square";
+         colorBox.style.backgroundColor = `hsl(${360 * (i / size)}, 100%, 50%)`;
+         matrixContainer.appendChild(colorBox);
+
         for (let j = 0; j < size; j++) { //Spalten
             const input = document.createElement("input");
             input.type = "number"; //Der Input soll eine Zahl zwischen -1 und 1 sein
