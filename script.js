@@ -5,11 +5,10 @@ const n = 1000; //Anzahl Partikel
 const dt = 0.01; //DeltaZeit zwischen Frames
 const frictionHalfLife = 0.02; //Halbwertszeit der Reibung
 const rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
-const m = 4; //Anzahl Farben
+const m = 5; //Anzahl Farben
 
 const matrix = makeRandomMatrix();
 createMatrixUserInterface(m, matrix);
-console.log(matrix)
 
 const forceFactor = 20; //Verstärkungsfaktor der Kraft
 
@@ -20,7 +19,7 @@ function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
     for (let i = 0; i < m; i++) {
         const row = [];
         for (let j = 0; j < m; j++) {
-            row.push(Math.round((Math.random() * 2 - 1)*100)/100); //Wert zwischen 1 und -1
+            row.push(Math.round((Math.random() * 2 - 1)*100)/100); //Wert zwischen 1 und -1 auf 2 Nachkommastellen gerundet
         }
         rows.push(row);
     }
@@ -29,10 +28,7 @@ function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
 
 function createMatrixUserInterface(size, randomMatrix) { //matrix mit m Reihen und m Spalten anzeigen auf Webseite, welche mit Random Zahlen gefüllt ist
     const matrixContainer = document.getElementById("matrix-container");
-    const colorRowTop = document.getElementById("color-row-top");
-
-    matrixContainer.innerHTML = ""; //Container leeren
-    colorRowTop.innerHTML = "";
+    const colorRowTop = document.getElementById("color-row-top"); //Obere FarbkästchenContainer
     
     matrixContainer.style.gridTemplateColumns = `repeat(${size + 1}, 40px)`; // Spaltenanzahl abhängig von anzahl Farben, size+1, weil es noch 1 box für Farbkästchen links hinzurechnen muss
     colorRowTop.style.gridTemplateColumns = `repeat(${size}, 40px)`; 
