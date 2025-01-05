@@ -1,11 +1,43 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
-    color: #333;
-    margin: 0;
-    padding: 20px;
   }
+
+#my-canvas {
+    width: 800px; /* Feste Breite */
+    height: 800px; /* Feste Höhe */
+    
+}
+
+#container {
+  display: flex; /* Canvas und user-tools nebeneinander */
+  gap: 60px; /* Abstand zwischen Canvas und matrix-container*/
+}
+
+#color-row-top {
+  display: grid;
+  gap: 40px;
+  margin-bottom: 40px;
+  margin-left: 80px; /* 40px (Farbkästchen-Breite + 40px (gap) nach rechts verschieben, damit Farbkästchen oben über den Inputfeldern sind */
+}
+
+#matrix-container {
+ display: grid;
+ gap: 40px;
+ align-items: center;
+}
+
+
+#matrix-container input {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
   
-  h1 {
-    color: #007BFF;
-  }
+}
+
+#color-square {
+   width: 40px;
+  height: 40px;
+}
