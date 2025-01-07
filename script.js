@@ -186,3 +186,13 @@ function restrictDistance(distance) { //Distanz zwischen zwei Partikel soll zwis
         return distance; //Keine Veränderung
     }
 }
+
+function setRandomParticlePositions() {
+    for (let i = 0; i < n; i++) {
+    positionsX[i] = Math.random(); //Zufällige Positionen
+    positionsY[i] = Math.random();
+    }
+}
+
+setRandomPositionButton = document.getElementById("set-random-position-button");
+setRandomPositionButton.addEventListener("click", setRandomParticlePositions);
