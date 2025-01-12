@@ -1,18 +1,18 @@
 const canvas = document.getElementById("my-canvas");
 const ctx = canvas.getContext("2d");
 
-const n = 1000; //Anzahl Partikel
-const dt = 0.01; //DeltaZeit zwischen Frames
-const frictionHalfLife = 0.02; //Halbwertszeit der Reibung
-const rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
-const m = 5; //Anzahl Farben
+var n = 1000; //Anzahl Partikel
+var dt = 0.01; //DeltaZeit zwischen Frames
+var frictionHalfLife = 0.02; //Halbwertszeit der Reibung
+var rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
+var m = 5; //Anzahl Farben
 
-const matrix = makeRandomMatrix();
+var matrix = makeRandomMatrix();
 createMatrixUserInterface(m, matrix);
 
-const forceFactor = 20; //Verstärkungsfaktor der Kraft
+var forceFactor = 20; //Verstärkungsfaktor der Kraft
 
-const frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
+var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
 
 function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
     const rows = [];
@@ -29,6 +29,10 @@ function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
 function createMatrixUserInterface(size, randomMatrix) { //matrix mit m Reihen und m Spalten anzeigen auf Webseite, welche mit Random Zahlen gefüllt ist
     const matrixContainer = document.getElementById("matrix-container");
     const colorRowTop = document.getElementById("color-row-top"); //Obere FarbkästchenContainer
+
+    //Leeren des vorherigen Inhalts
+    matrixContainer.innerHTML = "";
+    colorRowTop.innerHTML = "";
     
     matrixContainer.style.gridTemplateColumns = `repeat(${size + 1}, 40px)`; // Spaltenanzahl abhängig von anzahl Farben, size+1, weil es noch 1 box für Farbkästchen links hinzurechnen muss
     colorRowTop.style.gridTemplateColumns = `repeat(${size}, 40px)`; 
@@ -79,13 +83,17 @@ const velocitiesX = new Float32Array(n);
 const velocitiesY = new Float32Array(n);
 
 //Initialisierung der Partikel
-for (let i = 0; i < n; i++) {
-    colors[i] = Math.floor(Math.random() * m); //Random Farbe
-    positionsX[i] = Math.random(); //Zufällige Positionen
-    positionsY[i] = Math.random();
-    velocitiesX[i] = 0; //Geschwindigkeit = 0 am Anfang
-    velocitiesY[i] = 0;
+function initializeParticles() {
+    for (let i = 0; i < n; i++) {
+        colors[i] = Math.floor(Math.random() * m); //Random Farbe
+        positionsX[i] = Math.random(); //Zufällige Positionen
+        positionsY[i] = Math.random();
+        velocitiesX[i] = 0; //Geschwindigkeit = 0 am Anfang
+        velocitiesY[i] = 0;
+    }
 }
+
+initializeParticles();
 
 function loop() {
     updateParticles();
@@ -198,3 +206,24 @@ function setRandomParticlePositions() { //Stellt auch die Geschwindigkeiten der 
 
 setRandomPositionButton = document.getElementById("set-random-position-button");
 setRandomPositionButton.addEventListener("click", setRandomParticlePositions);
+
+function setMatrixSize() { //Beim drücken von Set Matrix Size Button soll eine neue Matrix mit dem Wert im Input Feld als Grösse gemacht werden
+    newSize = parseInt(document.getElementById("matrix-size").value);
+    if (isNaN(newSize) || newSize < 1) {
+        return;
+    }
+
+    m = newSize;
+
+
+    matrix = makeRandomMatrix();
+
+    //Neue Initialisierung der Partikel
+    initializeParticles();
+
+
+    createMatrixUserInterface(m, matrix);
+}
+
+setMatrixSizeButton = document.getElementById("set-matrix-size-button");
+setMatrixSizeButton.addEventListener("click", setMatrixSize);
