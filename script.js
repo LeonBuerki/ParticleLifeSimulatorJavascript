@@ -187,10 +187,12 @@ function restrictDistance(distance) { //Distanz zwischen zwei Partikel soll zwis
     }
 }
 
-function setRandomParticlePositions() {
+function setRandomParticlePositions() { //Stellt auch die Geschwindigkeiten der Partikel wieder auf 0
     for (let i = 0; i < n; i++) {
     positionsX[i] = Math.random(); //Zufällige Positionen
     positionsY[i] = Math.random();
+    velocitiesX[i] = 0;
+    velocitiesY[i] = 0;
     }
 }
 
