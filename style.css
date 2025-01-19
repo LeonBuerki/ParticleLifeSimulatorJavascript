@@ -8,12 +8,6 @@ main {
   gap: 60px; /* Abstand zwischen Canvas und matrix-container*/
 }
 
-#my-canvas {
-    width: 800px; /* Feste Breite */
-    height: 800px; /* Feste Höhe */
-    
-}
-
 #color-row-top {
   display: grid; /* Farbkästchen oben nebeneinander*/
   gap: 40px;
