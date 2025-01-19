@@ -1,18 +1,23 @@
 const canvas = document.getElementById("my-canvas");
 const ctx = canvas.getContext("2d");
 
+//Breite und Höhe der Zeichenfläche in Pixel
+let canvasWidth = 800;
+let canvasHeight = 800;
+
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
+
 var n = 1000; //Anzahl Partikel
 var dt = 0.01; //DeltaZeit zwischen Frames
 var frictionHalfLife = 0.02; //Halbwertszeit der Reibung
 var rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
 var m = 5; //Anzahl Farben
+var forceFactor = 20; //Verstärkungsfaktor der Kraft
+var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
 
 var matrix = makeRandomMatrix();
 createMatrixUserInterface(m, matrix);
-
-var forceFactor = 20; //Verstärkungsfaktor der Kraft
-
-var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
 
 function makeRandomMatrix() { //Generiert eine zufällige Matrix der Anziehung
     const rows = [];
