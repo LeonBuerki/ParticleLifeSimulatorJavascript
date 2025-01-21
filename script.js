@@ -84,3 +84,12 @@ setDeltaTimeButton.addEventListener("click", () => {
         dt = newdt;
     }
 });
+
+const setNumberParticlesButton = document.getElementById("set-particle-number-button");
+setNumberParticlesButton.addEventListener("click", () => {
+    let newn =  parseInt(document.getElementById("particle-number-input").value);
+    if (newn > 0) {
+        n = newn;
+        particles = initializeParticles(n, matrix.size);
+    }
+});
