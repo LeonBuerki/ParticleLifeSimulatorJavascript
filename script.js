@@ -14,7 +14,7 @@ canvas.height = canvasHeight;
 
 var n = 1000; //Anzahl Partikel
 var dt = 0.01; //DeltaZeit zwischen Frames
-var frictionHalfLife = 0.02; //Halbwertszeit der Reibung
+var frictionHalfLife = 0.01; //Halbwertszeit der Reibung
 var rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
 
 var forceFactor = 20; //Verstärkungsfaktor der Kraft
@@ -75,4 +75,12 @@ setMatrixSizeButton.addEventListener("click", () => {
     matrix.setMatrixSize();
     //Neue Initialisierung der Partikel
     particles = initializeParticles(n, matrix.size);
+});
+
+const setDeltaTimeButton = document.getElementById("set-delta-time-button");
+setDeltaTimeButton.addEventListener("click", () => {
+    let newdt =  parseFloat(document.getElementById("delta-time-input").value);
+    if (newdt > 0) {
+        dt = newdt;
+    }
 });

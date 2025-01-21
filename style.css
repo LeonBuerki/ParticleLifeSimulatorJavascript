@@ -37,12 +37,15 @@ main {
 }
 
 #user-tools-container {
-  display: flex;
   gap: 60px; /* Abstand zwischen Matrix Elementen und dem Rest */
   margin-top: 30px;
 }
 
 #set-random-position-button {
-  margin-top: 500px;
   height: 30px;
+}
+
+#user-tools-parameters {
+  margin-top: 60px;
+
 }
