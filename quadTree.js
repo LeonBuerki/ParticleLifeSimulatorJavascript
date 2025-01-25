@@ -2,7 +2,8 @@
 //da ich mit dem quadTree nur für jedes Partikel im Radius von rMax berechnen will, was die Force ist, und das dafür 
 //nicht nötig ist.
 
-//
+//In jedem internal node ist this.particle = null, in den external nodes ist this.particle = null, wenn es dort kein Partikel gibt,
+//und sonst ist this.particle = das Partikel, welches dort drinnen ist
 
 export class Quadrant { 
     constructor(x, y, length) { //x = x Koordinate vom Punkt oben links, y = y Koordinate vom Punkt oben links, length = width = height
@@ -37,16 +38,14 @@ export class Quadrant {
     }
 
     contains(particle, canvas) {
-        const canvasX = particle.positionX * canvas.width;
+        //Hochgerechnete Position der Koordinaten der Partikel, welche zwischen 0 und 1 sind
+        const canvasX = particle.positionX * canvas.width; 
         const canvasY = particle.positionY * canvas.height;
-        if (canvasX >= this.x &&
+
+        return (canvasX >= this.x &&
             canvasX <= this.x + this.length &&
             canvasY >= this.y &&
-            canvasY <= this.y + this.length) {
-                return true
-        } else {
-            return false
-        }
+            canvasY <= this.y + this.length)
     }
 
     insert(particle, canvas) {
@@ -55,15 +54,15 @@ export class Quadrant {
         }
 
         if (this.children.length === 0) {
-            //Das ist ein "external node"
+            //Das ist ein "external node", es hat keine "Kinderquadranten"
 
             if (this.particle === null) {
-                //Kein Partikel vorhanden, also füge es hinzu
+                //Kein Partikel vorhanden, also füge das einzufügende Partikel hinzu
                 this.particle = particle;
             } else {
                 //Partikel bereits vorhanden, also Quadrant unterteilen
                 this.subdivide();
-                //Das Partikel, das in diesem Quadranten ist, in eines der neu erstellten Quadranten einsetzen
+                //Das Partikel, das in dem aktuellen Quadranten ist, in eines der neu erstellten Quadranten einsetzen
                 for (let i = 0; i < 4; i++) {
                     this.children[i].insert(this.particle, canvas);
                 }
@@ -78,7 +77,7 @@ export class Quadrant {
         } else {
             //Das ist ein "internal node"
             for (let i = 0; i < 4; i++) {
-                //Es wird rekursiv versucht, das neue Partikel in die 4 Kinder Quadranten hinzuzufügen
+                //Es wird rekursiv versucht, das neue Partikel in die 4 Kinder Quadranten hinzuzufügen, es geht so die internal nodes durch, bis es einen external node findet
                 this.children[i].insert(particle, canvas);
             }
         }
