@@ -50,9 +50,6 @@ export function restrictDistance(distance) { //Distanz zwischen zwei Partikel so
 
 
 export function drawParticles(ctx, particles, canvas, m) {
-    ctx.fillStyle = "black"; //Canvas leeren
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     //Zeichnen der Partikel
     particles.forEach(particle => {
         ctx.beginPath();

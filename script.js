@@ -1,5 +1,6 @@
 import {restrictDistance, drawParticles, initializeParticles, setRandomParticlePositions, force} from './particle.js';
 import {Matrix, createMatrixUserInterface} from './matrix.js'
+import { Quadrant } from './quadTree.js';
 
 //canvas initialisieren
 const canvas = document.getElementById("my-canvas");
@@ -27,10 +28,22 @@ createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die L
 var particles = initializeParticles(n, matrix.size);
 
 function loop() {
-    let startCounter = performance.now(); //Zählt die Zeit für die ganze Berechnung
+    let quadTree = new Quadrant(0, 0, canvas.width); //Erster Quadrant des Quadtree's
+
+    //Partikel dem Quadtree hinzufügen
+    for (let i = 0; i < n; i++) {
+        quadTree.insert(particles[i], canvas);
+    }
+   
+    //let startCounter = performance.now(); //Zählt die Zeit für die ganze Berechnung
     updateParticles();
-    let endCounter = performance.now();
-    console.log("Runtime: ", endCounter - startCounter, "ms");
+    //let endCounter = performance.now();
+    //console.log("Runtime: ", endCounter - startCounter, "ms");
+
+    ctx.fillStyle = "black"; //Canvas leeren
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    quadTree.drawQuadrant(ctx);
 
     drawParticles(ctx, particles, canvas, matrix.size);
 
