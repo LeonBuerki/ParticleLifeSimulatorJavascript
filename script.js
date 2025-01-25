@@ -27,7 +27,11 @@ createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die L
 var particles = initializeParticles(n, matrix.size);
 
 function loop() {
+    let startCounter = performance.now(); //Zählt die Zeit für die ganze Berechnung
     updateParticles();
+    let endCounter = performance.now();
+    console.log("Runtime: ", endCounter - startCounter, "ms");
+
     drawParticles(ctx, particles, canvas, matrix.size);
 
     // Schleife fortsetzen
@@ -37,6 +41,8 @@ function loop() {
 // Simulation starten
 requestAnimationFrame(loop);
 
+
+//Dies ist eine Funktion der Kräfteberechnung mit einer runtime von O(n^2)
 function updateParticles() {
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
@@ -64,7 +70,6 @@ function updateParticles() {
         particles[i].updateVelocity(dt, frictionFactor, totalForceX, totalForceY);
         particles[i].updatePosition(dt);
     }
-
 }
 
 const setRandomPositionButton = document.getElementById("set-random-position-button");
