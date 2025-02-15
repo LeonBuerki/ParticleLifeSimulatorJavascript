@@ -27,6 +27,8 @@ createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die L
 //Array für Partikel
 var particles = initializeParticles(n, matrix.size);
 
+var showQuadtree = false;
+
 function loop() {
     let quadTree = new Quadrant(0, 0, canvas.width); //Erster Quadrant des Quadtree's
 
@@ -43,7 +45,9 @@ function loop() {
     ctx.fillStyle = "black"; //Canvas leeren
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    quadTree.drawQuadrant(ctx);
+    if (showQuadtree) {
+        quadTree.drawQuadrant(ctx);
+    };
 
     drawParticles(ctx, particles, canvas, matrix.size);
 
@@ -68,7 +72,7 @@ function updateParticles() {
             let ry = restrictDistance(particles[j].positionY - particles[i].positionY);
 
 
-            const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln aber nicht hoch 2!
+            const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln
             if (r > 0 && r < rMax) {
                 const f = force(r / rMax, matrix.matrix[particles[i].color][particles[j].color]);
                 totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
@@ -109,5 +113,15 @@ setNumberParticlesButton.addEventListener("click", () => {
     if (newn > 0) {
         n = newn;
         particles = initializeParticles(n, matrix.size);
+    }
+});
+
+const showQuadtreeButton = document.getElementById("show-quadtree-button");
+showQuadtreeButton.addEventListener("click", () => {
+    if (showQuadtree) {
+        showQuadtree = false;
+    }
+    else {
+        showQuadtree = true;
     }
 });
