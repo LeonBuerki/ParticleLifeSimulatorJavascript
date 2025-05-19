@@ -82,4 +82,58 @@ export class Quadrant {
             }
         }
     }
+
+    query(range, found = [], canvas) { //range ist ein Objekt, ein Viereck; found ist die Liste, in welcher alle gefundenen Parikel in der Range sind
+        if (!range.intersects(this.x, this.y, this.length)) { //Wenn das Range Viereck und der Quadrant sich nicht überschneiden
+            return found;
+          }
+        
+          if (this.children.length > 0) {
+            for (let i = 0; i < 4; i++) {
+                this.children[i].query(range, found, canvas); //Die Liste wird übertragen als Parameter, sodass am Schluss alle gefundenen in einer Liste sind
+            }
+            return found;
+          }
+        
+          if (this.particle != null) {
+            if (range.contains(this.particle, canvas)) {
+              found.push(this.particle);
+            }
+          }
+      
+          return found;
+    }
+}
+
+export class Range {
+    constructor(x, y, length) { //x y = Koordinaten oben links, length = ganze Breite des Quadrats
+        this.x = x;
+        this.y = y;
+        this.length = length;
+    }
+
+    intersects(quadrant_x, quadrant_y, quadrant_length) { // Ist es NICHT möglich, dass Quadrate sich überschneiden --> return false
+        return !(this.x > quadrant_x + quadrant_length || 
+            this.x + this.length < quadrant_x ||
+            this.y > quadrant_y + quadrant_length ||
+            this.y + this.length < quadrant_y)
+    }
+
+    contains(particle, canvas) {
+        //Hochgerechnete Position der Koordinaten der Partikel, welche eigentlich zwischen 0 und 1 sind
+        const canvasX = particle.positionX * canvas.width; 
+        const canvasY = particle.positionY * canvas.height;
+
+        return (canvasX >= this.x &&
+            canvasX <= this.x + this.length &&
+            canvasY >= this.y &&
+            canvasY <= this.y + this.length)
+    }
+
+    draw(ctx) {
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 1; 
+        ctx.strokeRect(this.x, this.y, this.length, this.length);
+    }
+
 }

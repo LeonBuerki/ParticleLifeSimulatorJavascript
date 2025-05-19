@@ -1,6 +1,6 @@
 import {restrictDistance, drawParticles, initializeParticles, setRandomParticlePositions, force} from './particle.js';
 import {Matrix, createMatrixUserInterface} from './matrix.js'
-import { Quadrant } from './quadTree.js';
+import { Quadrant, Range } from './quadTree.js';
 
 //canvas initialisieren
 const canvas = document.getElementById("my-canvas");
@@ -45,9 +45,24 @@ function loop() {
     ctx.fillStyle = "black"; //Canvas leeren
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+
+    //Das ist für Debug
+    ////////////
+    let range = new Range(100, 100, 300);
+
     if (showQuadtree) {
         quadTree.drawQuadrant(ctx);
+        range.draw(ctx);
+        let found = quadTree.query(range, [], canvas);
+
+        ctx.fillStyle = "white";
+        found.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.positionX * canvas.width, p.positionY * canvas.height, 2, 0, 2 * Math.PI);
+        ctx.fill();
+});
     };
+    ///////////
 
     drawParticles(ctx, particles, canvas, matrix.size);
 
