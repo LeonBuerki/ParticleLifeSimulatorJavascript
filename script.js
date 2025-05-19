@@ -24,7 +24,7 @@ var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basi
 var matrix = new Matrix(5, true); //Parameter 1 ist Anzahl Farben, Parameter 2 ist, ob eine random Matrix gemacht werden soll
 createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die Liste, in der die Matrix gespeichert ist
 
-let calculationMethod = "naive";
+let calculationMethod = 0; //0 = naive, 1 = querySquare
 
 //Array für Partikel
 var particles = initializeParticles(n, matrix.size);
@@ -38,9 +38,17 @@ function loop() {
     for (let i = 0; i < n; i++) {
         quadTree.insert(particles[i], canvas);
     }
+   
+    if (calculationMethod == 0) {
+        let numberDistanceCalculations = naiveUpdateParticles();
+        distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
+    }
+    else if (calculationMethod == 1) {
+        let numberDistanceCalculations = querySquareUpdateParticles(quadTree); 
+        distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
+    }
+
     
-    let numberForceCalculations = updateParticles()
-     forceComputations.textContent = "Force Computations:" + numberForceCalculations;
 
     ctx.fillStyle = "black"; //Canvas leeren
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -48,7 +56,8 @@ function loop() {
 
     //Das ist für Debug
     ////////////
-    let range = new Range(100, 100, 300);
+    let range = new Range(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);;
 
     if (showQuadtree) {
         quadTree.drawQuadrant(ctx);
@@ -75,8 +84,8 @@ requestAnimationFrame(loop);
 
 
 //Dies ist eine Funktion der Kräfteberechnung mit einer runtime von O(n^2)
-function updateParticles() {
-    let numberForceCalculations = 0; //Zählt, wie oft force() abgerufen wird mit periodic boundaries
+function naiveUpdateParticles() {
+    let distanceComputations = 0; //Zählt, wie oft die Distanz berechnet wird mit periodic boundaries!
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
@@ -89,12 +98,12 @@ function updateParticles() {
 
 
             const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln
+            distanceComputations += 1; 
             if (r > 0 && r < rMax) {
                 const f = force(r / rMax, matrix.matrix[particles[i].color][particles[j].color]);
                 totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
                 totalForceY += (ry / r) * f;
 
-                numberForceCalculations += 1; //Verbesserungsvorschlag: Jede Distanzberechnung zählen?
             }
         }
 
@@ -106,7 +115,43 @@ function updateParticles() {
         particles[i].updatePosition(dt);
     }
 
-    return numberForceCalculations;
+    return distanceComputations;
+}
+
+function querySquareUpdateParticles(quadTree) { //keine Periodic boundaries!
+    let distanceComputations = 0; 
+    for (let i = 0; i < n; i++) {
+        let totalForceX = 0;
+        let totalForceY = 0;
+
+        let range = new Range(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);
+        let found = quadTree.query(range, [], canvas);
+
+        found.forEach(particle => {
+            let rx =  particle.positionX - particles[i].positionX;
+            let ry = particle.positionY - particles[i].positionY;
+
+            const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln
+            distanceComputations += 1; 
+            if (r > 0 && r < rMax) {
+            const f = force(r / rMax, matrix.matrix[particles[i].color][particle.color]);
+            totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
+            totalForceY += (ry / r) * f;
+            }
+
+        });
+        
+         //Skalierung
+        totalForceX *= rMax * forceFactor;
+        totalForceY *= rMax * forceFactor;
+
+        particles[i].updateVelocity(dt, frictionFactor, totalForceX, totalForceY);
+        particles[i].updatePosition(dt);
+
+    }
+
+    return distanceComputations;
 }
 
 const setRandomPositionButton = document.getElementById("set-random-position-button");
@@ -146,4 +191,14 @@ showQuadtreeButton.addEventListener("click", () => {
     }
 });
 
-const forceComputations = document.getElementById("force-computations");
+const distanceComputations = document.getElementById("distance-computations");
+
+const naiveMethodButton = document.getElementById("naive-method-button");
+naiveMethodButton.addEventListener("click", () => {
+    calculationMethod = 0;
+});
+
+const querySquareMethodButton = document.getElementById("query-square-method-button");
+querySquareMethodButton.addEventListener("click", () => {
+    calculationMethod = 1;
+});
