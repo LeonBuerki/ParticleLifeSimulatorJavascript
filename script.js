@@ -24,6 +24,8 @@ var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basi
 var matrix = new Matrix(5, true); //Parameter 1 ist Anzahl Farben, Parameter 2 ist, ob eine random Matrix gemacht werden soll
 createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die Liste, in der die Matrix gespeichert ist
 
+let calculationMethod = "naive";
+
 //Array für Partikel
 var particles = initializeParticles(n, matrix.size);
 
@@ -36,11 +38,9 @@ function loop() {
     for (let i = 0; i < n; i++) {
         quadTree.insert(particles[i], canvas);
     }
-   
-    //let startCounter = performance.now(); //Zählt die Zeit für die ganze Berechnung
-    updateParticles();
-    //let endCounter = performance.now();
-    //console.log("Runtime: ", endCounter - startCounter, "ms");
+    
+    let numberForceCalculations = updateParticles()
+     forceComputations.textContent = "Force Computations:" + numberForceCalculations;
 
     ctx.fillStyle = "black"; //Canvas leeren
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -60,7 +60,7 @@ function loop() {
         ctx.beginPath();
         ctx.arc(p.positionX * canvas.width, p.positionY * canvas.height, 2, 0, 2 * Math.PI);
         ctx.fill();
-});
+        });
     };
     ///////////
 
@@ -76,6 +76,7 @@ requestAnimationFrame(loop);
 
 //Dies ist eine Funktion der Kräfteberechnung mit einer runtime von O(n^2)
 function updateParticles() {
+    let numberForceCalculations = 0; //Zählt, wie oft force() abgerufen wird mit periodic boundaries
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
@@ -92,6 +93,8 @@ function updateParticles() {
                 const f = force(r / rMax, matrix.matrix[particles[i].color][particles[j].color]);
                 totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
                 totalForceY += (ry / r) * f;
+
+                numberForceCalculations += 1; //Verbesserungsvorschlag: Jede Distanzberechnung zählen?
             }
         }
 
@@ -102,6 +105,8 @@ function updateParticles() {
         particles[i].updateVelocity(dt, frictionFactor, totalForceX, totalForceY);
         particles[i].updatePosition(dt);
     }
+
+    return numberForceCalculations;
 }
 
 const setRandomPositionButton = document.getElementById("set-random-position-button");
@@ -140,3 +145,5 @@ showQuadtreeButton.addEventListener("click", () => {
         showQuadtree = true;
     }
 });
+
+const forceComputations = document.getElementById("force-computations");
