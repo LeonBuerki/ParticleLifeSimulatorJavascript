@@ -34,7 +34,7 @@ var showQuadtree = false;
 function loop() {
     let quadTree;
     
-    if (calculationMethod == 0) {
+    if (calculationMethod == 0) { //naive Methode
         let numberDistanceCalculations = naiveUpdateParticles();
         distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
     }
@@ -58,20 +58,116 @@ function loop() {
 
     //Das ist für Debug
     ////////////
-     let range;
+     let ranges = [];
+
     if (calculationMethod == 1) {
-    range = new Square(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
-                            particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);
-                            }
-    else if (calculationMethod == 2) {
-    range = new Circle(particles[0].positionX * canvasWidth, 
-                        particles[0].positionY * canvasHeight, rMax * canvasWidth);
+    ranges.push(new Square(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+
+     if (particles[0].positionX < rMax) {
+            ranges.push(new Square(canvasWidth + particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                                particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+            }
+
+    else if (particles[0].positionX > 1 - rMax) {
+    ranges.push(new Square(-canvasWidth + particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                        particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
     }
 
-    if (showQuadtree && range) { //Wenn range existiert
+    if (particles[0].positionY < rMax) {
+    ranges.push(new Square(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                        canvasHeight + particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+    }
+
+    else if (particles[0].positionY > 1 - rMax) {
+    ranges.push(new Square(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                        -canvasHeight + particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+    }
+
+
+     // Ecken
+    if (particles[0].positionX < rMax && particles[0].positionY < rMax) {
+        ranges.push(new Square(canvasWidth + particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                               canvasHeight + particles[0].positionY * canvasHeight - rMax * canvasHeight, 
+                               2 * rMax * canvasWidth));
+    }
+    if (particles[0].positionX > 1 - rMax && particles[0].positionY < rMax) {
+        ranges.push(new Square(-canvasWidth + particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                               canvasHeight + particles[0].positionY * canvasHeight - rMax * canvasHeight, 
+                               2 * rMax * canvasWidth));
+    }
+    if (particles[0].positionX < rMax && particles[0].positionY > 1 - rMax) {
+        ranges.push(new Square(canvasWidth + particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                               -canvasHeight + particles[0].positionY * canvasHeight - rMax * canvasHeight, 
+                               2 * rMax * canvasWidth));
+    }
+    if (particles[0].positionX > 1 - rMax && particles[0].positionY > 1 - rMax) {
+        ranges.push(new Square(-canvasWidth + particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                               -canvasHeight + particles[0].positionY * canvasHeight - rMax * canvasHeight, 
+                               2 * rMax * canvasWidth));
+    }
+
+    }
+    
+    else if (calculationMethod == 2) {
+    ranges.push(new Circle(particles[0].positionX * canvasWidth, 
+                        particles[0].positionY * canvasHeight, rMax * canvasWidth));
+        
+
+    if (particles[0].positionX < rMax) { //linke boundary
+    ranges.push(new Circle(canvasWidth + particles[0].positionX * canvasWidth, 
+                        particles[0].positionY * canvasHeight, rMax * canvasWidth));
+    }
+
+    else if (particles[0].positionX > 1 - rMax) { //rechte boundary
+    ranges.push(new Circle(-canvasWidth + particles[0].positionX * canvasWidth, 
+                        particles[0].positionY * canvasHeight, rMax * canvasWidth));
+    }
+
+    if (particles[0].positionY < rMax) { //obere boundary
+    ranges.push(new Circle(particles[0].positionX * canvasWidth, 
+                        canvasHeight + particles[0].positionY * canvasHeight, rMax * canvasWidth));
+    }
+
+    else if (particles[0].positionY > 1 - rMax) { //untere boundary
+    ranges.push(new Circle(particles[0].positionX * canvasWidth, 
+                        -canvasHeight + particles[0].positionY * canvasHeight, rMax * canvasWidth));
+    }
+
+    //Ecken
+    if (particles[0].positionX < rMax && particles[0].positionY < rMax) { //oben links
+        ranges.push(new Circle(canvasWidth + particles[0].positionX * canvasWidth, //Dann muss unten rechts noch eine Range sein
+                            canvasHeight + particles[0].positionY * canvasHeightt, 
+                            rMax * canvasWidth));
+    }
+    if (particles[0].positionX > 1 - rMax && particles[0].positionY < rMax) { //oben rechts
+        ranges.push(new Circle(-canvasWidth + particles[0].positionX * canvasWidth,  //noch unten links
+                            canvasHeight + particles[0].positionY * canvasHeight, 
+                            rMax * canvasWidth));
+    }
+    if (particles[0].positionX < rMax && particles[0].positionY > 1 - rMax) { //unten links
+        ranges.push(new Circle(canvasWidth + particles[0].positionX * canvasWidth, //oben rechts
+                            -canvasHeight + particles[0].positionY * canvasHeight, 
+                            rMax * canvasWidth));
+    }
+    if (particles[0].positionX > 1 - rMax && particles[0].positionY > 1 - rMax) { //unten rechts
+        ranges.push(new Circle(-canvasWidth + particles[0].positionX * canvasWidth, //oben links
+                            -canvasHeight + particles[0].positionY * canvasHeight, 
+                            rMax * canvasWidth));
+    }
+}
+
+    if (showQuadtree && quadTree) { //Wenn range existiert
         quadTree.drawQuadrant(ctx);
-        range.draw(ctx);
-        let found = quadTree.query(range, [], canvas);
+        let found = [];
+        ranges.forEach(range => {
+            found = found.concat(quadTree.query(range, [], canvas));
+        });
+        ranges.forEach(range => {
+            range.draw(ctx);
+        });
+     
+
 
         ctx.fillStyle = "white";
         found.forEach(p => {
@@ -127,23 +223,118 @@ function naiveUpdateParticles() {
     return distanceComputations;
 }
 
-function queryUpdateParticles(quadTree) { //keine Periodic boundaries!
+function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
     let distanceComputations = 0; 
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
 
-        let range;
+        let ranges = [];
 
-        if (calculationMethod == 1) {
-        range = new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
-                            particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);
+        if (calculationMethod == 1) { //query Square
+        ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+            
+            ///////////////////
+        if (particles[i].positionX < rMax) { //linke boundary
+        ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
         }
-        else if (calculationMethod == 2) {
-        range = new Circle(particles[i].positionX * canvasWidth, 
-                            particles[i].positionY * canvasHeight, rMax * canvasWidth);
+
+        else if (particles[i].positionX > 1 - rMax) { //rechte boundary
+        ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
         }
-        let found = quadTree.query(range, [], canvas);
+
+        if (particles[i].positionY < rMax) { //obere boundary
+        ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+                            canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+        }
+
+        else if (particles[i].positionY > 1 - rMax) { //untere boundary
+        ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+                            -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+        }
+        //Ecken
+        if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //oben links
+            ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //Dann muss unten rechts noch eine Range sein
+                                canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
+                                2 * rMax * canvasWidth));
+        }
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //oben rechts
+            ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth,  //noch unten links
+                                canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
+                                2 * rMax * canvasWidth));
+        }
+        if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //unten links
+            ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben rechts
+                                -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
+                                2 * rMax * canvasWidth));
+        }
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //unten rechts
+            ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben links
+                                -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
+                                2 * rMax * canvasWidth));
+        }
+
+        }
+
+        ////////////////////////////////////
+
+        else if (calculationMethod == 2) { //query Circle
+        ranges.push(new Circle(particles[i].positionX * canvasWidth, 
+                            particles[i].positionY * canvasHeight, rMax * canvasWidth));
+        
+
+        if (particles[i].positionX < rMax) { //linke boundary
+        ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, 
+                            particles[i].positionY * canvasHeight, rMax * canvasWidth));
+        }
+
+        else if (particles[i].positionX > 1 - rMax) { //rechte boundary
+        ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth, 
+                            particles[i].positionY * canvasHeight, rMax * canvasWidth));
+        }
+
+        if (particles[i].positionY < rMax) { //obere boundary
+        ranges.push(new Circle(particles[i].positionX * canvasWidth, 
+                            canvasHeight + particles[i].positionY * canvasHeight, rMax * canvasWidth));
+        }
+
+        else if (particles[i].positionY > 1 - rMax) { //untere boundary
+        ranges.push(new Circle(particles[i].positionX * canvasWidth, 
+                            -canvasHeight + particles[i].positionY * canvasHeight, rMax * canvasWidth));
+        }
+
+        //Ecken
+        if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //oben links
+            ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //Dann muss unten rechts noch eine Range sein
+                                canvasHeight + particles[i].positionY * canvasHeight, 
+                                rMax * canvasWidth));
+        }
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //oben rechts
+            ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth,  //noch unten links
+                                canvasHeight + particles[i].positionY * canvasHeight, 
+                                rMax * canvasWidth));
+        }
+        if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //unten links
+            ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //oben rechts
+                                -canvasHeight + particles[i].positionY * canvasHeight, 
+                                rMax * canvasWidth));
+        }
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //unten rechts
+            ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth, //oben links
+                                -canvasHeight + particles[i].positionY * canvasHeight, 
+                                rMax * canvasWidth));
+        }
+
+        }
+
+
+        let found = [];
+        ranges.forEach(range => {
+            found = found.concat(quadTree.query(range, [], canvas));
+        });
 
         found.forEach(particle => {
             let rx =  particle.positionX - particles[i].positionX;
