@@ -1,6 +1,6 @@
 import {restrictDistance, drawParticles, initializeParticles, setRandomParticlePositions, force} from './particle.js';
 import {Matrix, createMatrixUserInterface} from './matrix.js'
-import { Quadrant, Range } from './quadTree.js';
+import { Quadrant, Square, Circle} from './quadTree.js';
 
 //canvas initialisieren
 const canvas = document.getElementById("my-canvas");
@@ -24,7 +24,7 @@ var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basi
 var matrix = new Matrix(5, true); //Parameter 1 ist Anzahl Farben, Parameter 2 ist, ob eine random Matrix gemacht werden soll
 createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die Liste, in der die Matrix gespeichert ist
 
-let calculationMethod = 0; //0 = naive, 1 = querySquare
+let calculationMethod = 0; //0 = naive, 1 = querySquare, 2 = queryCircle
 
 //Array für Partikel
 var particles = initializeParticles(n, matrix.size);
@@ -32,19 +32,21 @@ var particles = initializeParticles(n, matrix.size);
 var showQuadtree = false;
 
 function loop() {
-    let quadTree = new Quadrant(0, 0, canvas.width); //Erster Quadrant des Quadtree's
-
-    //Partikel dem Quadtree hinzufügen
-    for (let i = 0; i < n; i++) {
-        quadTree.insert(particles[i], canvas);
-    }
-   
+    let quadTree;
+    
     if (calculationMethod == 0) {
         let numberDistanceCalculations = naiveUpdateParticles();
         distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
     }
-    else if (calculationMethod == 1) {
-        let numberDistanceCalculations = querySquareUpdateParticles(quadTree); 
+    else if (calculationMethod == 1 || calculationMethod == 2) { //Quadtree nötig
+        quadTree = new Quadrant(0, 0, canvas.width); //Erster Quadrant des Quadtree's
+
+        //Partikel dem Quadtree hinzufügen
+        for (let i = 0; i < n; i++) {
+            quadTree.insert(particles[i], canvas);
+        }
+
+        let numberDistanceCalculations = queryUpdateParticles(quadTree); 
         distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
     }
 
@@ -56,10 +58,17 @@ function loop() {
 
     //Das ist für Debug
     ////////////
-    let range = new Range(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
-                            particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);;
+     let range;
+    if (calculationMethod == 1) {
+    range = new Square(particles[0].positionX * canvasWidth - rMax * canvasWidth, 
+                            particles[0].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);
+                            }
+    else if (calculationMethod == 2) {
+    range = new Circle(particles[0].positionX * canvasWidth, 
+                        particles[0].positionY * canvasHeight, rMax * canvasWidth);
+    }
 
-    if (showQuadtree) {
+    if (showQuadtree && range) { //Wenn range existiert
         quadTree.drawQuadrant(ctx);
         range.draw(ctx);
         let found = quadTree.query(range, [], canvas);
@@ -118,14 +127,22 @@ function naiveUpdateParticles() {
     return distanceComputations;
 }
 
-function querySquareUpdateParticles(quadTree) { //keine Periodic boundaries!
+function queryUpdateParticles(quadTree) { //keine Periodic boundaries!
     let distanceComputations = 0; 
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
 
-        let range = new Range(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
+        let range;
+
+        if (calculationMethod == 1) {
+        range = new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth);
+        }
+        else if (calculationMethod == 2) {
+        range = new Circle(particles[i].positionX * canvasWidth, 
+                            particles[i].positionY * canvasHeight, rMax * canvasWidth);
+        }
         let found = quadTree.query(range, [], canvas);
 
         found.forEach(particle => {
@@ -201,4 +218,9 @@ naiveMethodButton.addEventListener("click", () => {
 const querySquareMethodButton = document.getElementById("query-square-method-button");
 querySquareMethodButton.addEventListener("click", () => {
     calculationMethod = 1;
+});
+
+const queryCircleMethodButton = document.getElementById("query-circle-method-button");
+queryCircleMethodButton.addEventListener("click", () => {
+    calculationMethod = 2;
 });

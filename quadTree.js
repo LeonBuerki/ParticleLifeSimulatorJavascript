@@ -83,8 +83,8 @@ export class Quadrant {
         }
     }
 
-    query(range, found = [], canvas) { //range ist ein Objekt, ein Viereck; found ist die Liste, in welcher alle gefundenen Parikel in der Range sind
-        if (!range.intersects(this.x, this.y, this.length)) { //Wenn das Range Viereck und der Quadrant sich nicht überschneiden
+    query(range, found = [], canvas) { //range ist ein Objekt (Quadrat oder Kreis); found ist die Liste, in welcher alle gefundenen Parikel in der Range sind
+        if (!range.intersects(this.x, this.y, this.length)) { //Wenn die Range Fläche und der Quadrant sich nicht überschneiden
             return found;
           }
         
@@ -105,7 +105,7 @@ export class Quadrant {
     }
 }
 
-export class Range {
+export class Square {
     constructor(x, y, length) { //x y = Koordinaten oben links, length = ganze Breite des Quadrats
         this.x = x;
         this.y = y;
@@ -135,5 +135,42 @@ export class Range {
         ctx.lineWidth = 1; 
         ctx.strokeRect(this.x, this.y, this.length, this.length);
     }
+}
 
+export class Circle {
+    constructor(x, y, radius) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+    }
+
+    intersects(quadrant_x, quadrant_y, quadrant_length) {
+        const xDist = Math.abs(this.x - (quadrant_x + quadrant_length / 2));
+        const yDist = Math.abs(this.y - (quadrant_y + quadrant_length / 2));
+        const r = this.radius;
+        const half = quadrant_length / 2;
+
+        const edges = Math.pow(xDist - half, 2) + Math.pow(yDist - half, 2);
+
+        if (xDist > (r + half) || yDist > (r + half)) return false;
+        if (xDist <= half || yDist <= half) return true;
+        return edges <= r * r;
+    }
+
+    contains(particle, canvas) {
+        const canvasX = particle.positionX * canvas.width;
+        const canvasY = particle.positionY * canvas.height;
+        const dx = canvasX - this.x;
+        const dy = canvasY - this.y;
+        const distanceSquared = dx * dx + dy * dy;
+        return distanceSquared < this.radius * this.radius;
+    }
+
+    draw(ctx) {
+        ctx.strokeStyle = 'green';
+        ctx.lineWidth = 1; 
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI); 
+        ctx.stroke(); 
+    }
 }
