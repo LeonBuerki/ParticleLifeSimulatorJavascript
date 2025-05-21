@@ -21,7 +21,7 @@ var rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
 var forceFactor = 20; //Verstärkungsfaktor der Kraft
 var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
 
-var matrix = new Matrix(5, true); //Parameter 1 ist Anzahl Farben, Parameter 2 ist, ob eine random Matrix gemacht werden soll
+var matrix = new Matrix(5, true); //Parameter 1 ist Anzahl Farben, Parameter 2 ist ob eine random Matrix gemacht werden soll
 createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die Liste, in der die Matrix gespeichert ist
 
 let calculationMethod = 0; //0 = naive, 1 = querySquare, 2 = queryCircle
@@ -33,10 +33,13 @@ var showQuadtree = false;
 
 function loop() {
     let quadTree;
+    let t0 = performance.now();
     
     if (calculationMethod == 0) { //naive Methode
         let numberDistanceCalculations = naiveUpdateParticles();
-        distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
+        distanceComputationsElement.textContent = "Distance Computations:" + numberDistanceCalculations;
+        rangeCountElement.textContent = "Ranges:" + 0;
+        
     }
     else if (calculationMethod == 1 || calculationMethod == 2) { //Quadtree nötig
         quadTree = new Quadrant(0, 0, canvas.width); //Erster Quadrant des Quadtree's
@@ -46,8 +49,9 @@ function loop() {
             quadTree.insert(particles[i], canvas);
         }
 
-        let numberDistanceCalculations = queryUpdateParticles(quadTree); 
-        distanceComputations.textContent = "Distance Computations:" + numberDistanceCalculations;
+        let {distanceComputations, rangeCount} = queryUpdateParticles(quadTree); 
+        distanceComputationsElement.textContent = "Distance Computations:" + distanceComputations;
+        rangeCountElement.textContent = "Ranges:" + rangeCount;
     }
 
     
@@ -137,7 +141,7 @@ function loop() {
     //Ecken
     if (particles[0].positionX < rMax && particles[0].positionY < rMax) { //oben links
         ranges.push(new Circle(canvasWidth + particles[0].positionX * canvasWidth, //Dann muss unten rechts noch eine Range sein
-                            canvasHeight + particles[0].positionY * canvasHeightt, 
+                            canvasHeight + particles[0].positionY * canvasHeight, 
                             rMax * canvasWidth));
     }
     if (particles[0].positionX > 1 - rMax && particles[0].positionY < rMax) { //oben rechts
@@ -180,6 +184,10 @@ function loop() {
 
     drawParticles(ctx, particles, canvas, matrix.size);
 
+    let t1 = performance.now();
+    let timePerFrame = Math.floor((t1 - t0) * 1000) / 1000; //in Millisekunden auf 3 Nachkommastellen gerundet
+    timePerFrameElement.textContent = "Time Per Frame:" + timePerFrame + "ms";
+
     // Schleife fortsetzen
     requestAnimationFrame(loop);
 }
@@ -190,7 +198,7 @@ requestAnimationFrame(loop);
 
 //Dies ist eine Funktion der Kräfteberechnung mit einer runtime von O(n^2)
 function naiveUpdateParticles() {
-    let distanceComputations = 0; //Zählt, wie oft die Distanz berechnet wird mit periodic boundaries!
+    let distanceComputations = 0; //Zählt, wie oft die Distanz berechnet wird mit periodic boundaries
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
@@ -225,6 +233,8 @@ function naiveUpdateParticles() {
 
 function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
     let distanceComputations = 0; 
+    let rangeCount = 0;
+
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
@@ -234,49 +244,57 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
         if (calculationMethod == 1) { //query Square
         ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+        rangeCount++;
             
             ///////////////////
         if (particles[i].positionX < rMax) { //linke boundary
         ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+            rangeCount++;
         }
 
         else if (particles[i].positionX > 1 - rMax) { //rechte boundary
         ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+            rangeCount++;
         }
 
         if (particles[i].positionY < rMax) { //obere boundary
         ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+            rangeCount++;
         }
 
         else if (particles[i].positionY > 1 - rMax) { //untere boundary
         ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
+            rangeCount++;
         }
         //Ecken
         if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //oben links
             ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //Dann muss unten rechts noch eine Range sein
                                 canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
+            rangeCount++;
         }
         if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //oben rechts
             ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth,  //noch unten links
                                 canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
+            rangeCount++;
         }
         if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //unten links
             ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben rechts
                                 -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
+            rangeCount++;
         }
         if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //unten rechts
             ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben links
                                 -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
+            rangeCount++;
         }
-
         }
 
         ////////////////////////////////////
@@ -284,26 +302,31 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
         else if (calculationMethod == 2) { //query Circle
         ranges.push(new Circle(particles[i].positionX * canvasWidth, 
                             particles[i].positionY * canvasHeight, rMax * canvasWidth));
+            rangeCount++;
         
 
         if (particles[i].positionX < rMax) { //linke boundary
         ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, 
                             particles[i].positionY * canvasHeight, rMax * canvasWidth));
+            rangeCount++;
         }
 
         else if (particles[i].positionX > 1 - rMax) { //rechte boundary
         ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth, 
                             particles[i].positionY * canvasHeight, rMax * canvasWidth));
+            rangeCount++;
         }
 
         if (particles[i].positionY < rMax) { //obere boundary
         ranges.push(new Circle(particles[i].positionX * canvasWidth, 
                             canvasHeight + particles[i].positionY * canvasHeight, rMax * canvasWidth));
+            rangeCount++;
         }
 
         else if (particles[i].positionY > 1 - rMax) { //untere boundary
         ranges.push(new Circle(particles[i].positionX * canvasWidth, 
                             -canvasHeight + particles[i].positionY * canvasHeight, rMax * canvasWidth));
+            rangeCount++;
         }
 
         //Ecken
@@ -311,23 +334,26 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
             ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //Dann muss unten rechts noch eine Range sein
                                 canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
+            rangeCount++;
         }
         if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //oben rechts
             ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth,  //noch unten links
                                 canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
+            rangeCount++;
         }
         if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //unten links
             ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //oben rechts
                                 -canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
+            rangeCount++;
         }
         if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //unten rechts
             ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth, //oben links
                                 -canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
+            rangeCount++;
         }
-
         }
 
 
@@ -337,6 +363,7 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
         });
 
         found.forEach(particle => {
+            if (particle === particles[i]) return;
             let rx =  particle.positionX - particles[i].positionX;
             let ry = particle.positionY - particles[i].positionY;
 
@@ -359,7 +386,7 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
 
     }
 
-    return distanceComputations;
+    return {distanceComputations, rangeCount};
 }
 
 const setRandomPositionButton = document.getElementById("set-random-position-button");
@@ -399,7 +426,11 @@ showQuadtreeButton.addEventListener("click", () => {
     }
 });
 
-const distanceComputations = document.getElementById("distance-computations");
+const distanceComputationsElement = document.getElementById("distance-computations");
+
+const rangeCountElement = document.getElementById("range-count");
+
+const timePerFrameElement = document.getElementById("time-per-frame");
 
 const naiveMethodButton = document.getElementById("naive-method-button");
 naiveMethodButton.addEventListener("click", () => {
