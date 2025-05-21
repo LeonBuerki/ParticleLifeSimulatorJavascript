@@ -26,6 +26,9 @@ createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die L
 
 let calculationMethod = 0; //0 = naive, 1 = querySquare, 2 = queryCircle
 
+let summedTime = 0;
+let framesPassed = 0;
+
 //Array für Partikel
 var particles = initializeParticles(n, matrix.size);
 
@@ -187,6 +190,12 @@ function loop() {
     let t1 = performance.now();
     let timePerFrame = Math.floor((t1 - t0) * 1000) / 1000; //in Millisekunden auf 3 Nachkommastellen gerundet
     timePerFrameElement.textContent = "Time Per Frame:" + timePerFrame + "ms";
+
+    summedTime += timePerFrame;
+    framesPassed ++;
+
+    averageTimePerFrameElement.textContent = "Average Time Per Frame:" + Math.floor((summedTime / framesPassed) * 1000) / 1000 + "ms / frame";
+
 
     // Schleife fortsetzen
     requestAnimationFrame(loop);
@@ -431,6 +440,14 @@ const distanceComputationsElement = document.getElementById("distance-computatio
 const rangeCountElement = document.getElementById("range-count");
 
 const timePerFrameElement = document.getElementById("time-per-frame");
+
+const averageTimePerFrameElement = document.getElementById("average-time-per-frame");
+
+const ResetAverageTimePerFrameButton = document.getElementById("reset-average-time-per-frame-button");
+ResetAverageTimePerFrameButton.addEventListener("click", () => {
+    summedTime = 0;
+    framesPassed = 0;
+});
 
 const naiveMethodButton = document.getElementById("naive-method-button");
 naiveMethodButton.addEventListener("click", () => {
