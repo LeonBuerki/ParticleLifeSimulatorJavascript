@@ -34,6 +34,14 @@ var particles = initializeParticles(n, matrix.size);
 
 var showQuadtree = false;
 
+const savedMatrix = [
+    [0.44, 0.54, -0.96, 0.11, 0],
+    [0.66, -0.15, -0.77, 0.5, -0.74],
+    [0.23, 0.85, 0.54, -0.19, 0.22],
+    [-0.59, 0.43, 0.63, -0.7, -0.5],
+    [-0.51, -0.24, 0.89, -0.02, -0.2]
+];
+
 function loop() {
     let quadTree;
     let t0 = performance.now();
@@ -442,6 +450,13 @@ const rangeCountElement = document.getElementById("range-count");
 const timePerFrameElement = document.getElementById("time-per-frame");
 
 const averageTimePerFrameElement = document.getElementById("average-time-per-frame");
+
+const loadSavedMatrixButton = document.getElementById("load-saved-matrix-button");
+loadSavedMatrixButton.addEventListener("click", () => {
+    matrix.size = savedMatrix.length;
+    matrix.matrix = savedMatrix;
+    createMatrixUserInterface(matrix.size, matrix.matrix);
+});
 
 const ResetAverageTimePerFrameButton = document.getElementById("reset-average-time-per-frame-button");
 ResetAverageTimePerFrameButton.addEventListener("click", () => {
