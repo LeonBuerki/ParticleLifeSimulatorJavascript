@@ -6,7 +6,7 @@ export class Matrix {
     }
 
    
-    GenerateNewMatrix() { //Generiert eine neue Matrix der Anziehung
+    GenerateNewMatrix() {
         const rows = [];
         for (let i = 0; i < this.size; i++) {
             const row = [];

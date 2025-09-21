@@ -1,9 +1,11 @@
-//Der Code für einen quadTree, wobei NICHT in jedem Quadrant die Anzahl Partikel und center-of-mass gespeichert wird,
-//da ich mit dem quadTree nur für jedes Partikel im Radius von rMax berechnen will, was die Force ist, und das dafür 
+//Der Code für einen Quadtree, wobei NICHT in jedem Quadrant die Anzahl Partikel und center-of-mass gespeichert wird (wie das üblich in Barnes-Hut-Implementationen ist),
+//da ich mit dem Quadtree für jedes Partikel im Radius von rMax berechnen will, was die totale Kraft ist, und dies dafür 
 //nicht nötig ist.
 
 //In jedem internal node ist this.particle = null, in den external nodes ist this.particle = null, wenn es dort kein Partikel gibt,
-//und sonst ist this.particle = das Partikel, welches dort drinnen ist
+//sonst ist this.particle = das Partikel, welches dort drinnen ist
+
+//Ich habe mich an der Implementierung eines Quadtrees von "The Coding Train" orientiert vgl. https://github.com/CodingTrain/QuadTree/blob/main/quadtree.js
 
 export class Quadrant { 
     constructor(x, y, length) { //x = x Koordinate vom Punkt oben links, y = y Koordinate vom Punkt oben links, length = width = height
@@ -14,7 +16,7 @@ export class Quadrant {
         this.particle = null; //null bedeutet, es ist noch kein Partikel drinnen
     }
 
-    drawQuadrant(ctx) {
+    drawQuadrant(ctx) { //Debugging-Werkzeug
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 1; 
         ctx.strokeRect(this.x, this.y, this.length, this.length);
@@ -37,8 +39,10 @@ export class Quadrant {
         this.children.push(nw, ne, sw, se);
     }
 
-    contains(particle, canvas) {
-        //Hochgerechnete Position der Koordinaten der Partikel, welche zwischen 0 und 1 sind
+    contains(particle, canvas) { //Befindet sich ein Partikel im Quadranten?
+        //Hochgerechnete Position der Koordinaten der Partikel, welche nach der Hochrechnung zwischen 0 und 800 sind
+        //Dies ist nötig, weil die Quadrant-Koordinaten auch in Zahlen zwischen 0 und 800 ausgedrückt werden und nur durch die Hochrechnung
+        //Ein Vergleich möglich ist
         const canvasX = particle.positionX * canvas.width; 
         const canvasY = particle.positionY * canvas.height;
 
@@ -48,13 +52,13 @@ export class Quadrant {
             canvasY <= this.y + this.length)
     }
 
-    insert(particle, canvas) {
+    insert(particle, canvas) { //Ein Partikel in den Quadtree einfügen
         if (!this.contains(particle, canvas)) { //Wenn das Partikel gar nicht in diesem Quadranten ist, soll gar nicht inserted werden
             return
         }
 
         if (this.children.length === 0) {
-            //Das ist ein "external node", es hat keine "Kinderquadranten"
+            //Das ist ein external node, es hat keine Kinderquadranten
 
             if (this.particle === null) {
                 //Kein Partikel vorhanden, also füge das einzufügende Partikel hinzu
@@ -75,16 +79,16 @@ export class Quadrant {
                  }
             }
         } else {
-            //Das ist ein "internal node"
+            //Das ist ein internal node
             for (let i = 0; i < 4; i++) {
-                //Es wird rekursiv versucht, das neue Partikel in die 4 Kinder Quadranten hinzuzufügen, es geht so die internal nodes durch, bis es einen external node findet
+                //Es wird rekursiv versucht, das neue Partikel in die 4 Kinderquadranten hinzuzufügen, es geht so die internal nodes durch, bis es einen external node findet
                 this.children[i].insert(particle, canvas);
             }
         }
     }
 
     query(range, found = [], canvas) { //range ist ein Objekt (Quadrat oder Kreis); found ist die Liste, in welcher alle gefundenen Parikel in der Range sind
-        if (!range.intersects(this.x, this.y, this.length)) { //Wenn die Range Fläche und der Quadrant sich nicht überschneiden
+        if (!range.intersects(this.x, this.y, this.length)) { //Wenn die Range-Fläche und der Quadrant sich nicht überschneiden
             return found;
           }
         
@@ -106,7 +110,7 @@ export class Quadrant {
 }
 
 export class Square {
-    constructor(x, y, length) { //x y = Koordinaten oben links, length = ganze Breite des Quadrats
+    constructor(x, y, length) { //x, y = Koordinaten oben links, length = ganze Breite des Quadrats
         this.x = x;
         this.y = y;
         this.length = length;
@@ -130,7 +134,7 @@ export class Square {
             canvasY <= this.y + this.length)
     }
 
-    draw(ctx) {
+    draw(ctx) { //Debugging-Werkzeug
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 1; 
         ctx.strokeRect(this.x, this.y, this.length, this.length);
@@ -145,16 +149,21 @@ export class Circle {
     }
 
     intersects(quadrant_x, quadrant_y, quadrant_length) {
-        const xDist = Math.abs(this.x - (quadrant_x + quadrant_length / 2));
+        const xDist = Math.abs(this.x - (quadrant_x + quadrant_length / 2)); //Abstand zwischen Mittelpunkt des Kreis und des Quadranten
         const yDist = Math.abs(this.y - (quadrant_y + quadrant_length / 2));
         const r = this.radius;
         const half = quadrant_length / 2;
 
-        const edges = Math.pow(xDist - half, 2) + Math.pow(yDist - half, 2);
+        const edges = Math.pow(xDist - half, 2) + Math.pow(yDist - half, 2); //(Abstand zwischen Kreis-Mittelpunkt und nächster Ecke des Quadranten) hoch 2
 
-        if (xDist > (r + half) || yDist > (r + half)) return false;
-        if (xDist <= half || yDist <= half) return true;
-        return edges <= r * r;
+        if (xDist > (r + half) || yDist > (r + half)) { //Überlappung ausschliessen
+            return false;
+        }
+
+        if (xDist <= half || yDist <= half) { //Überlappung bestätigen
+            return true;
+        }
+        return edges <= r * r; //Schneidet die kreisförmige-Fläche eine Ecke des Quadranten?
     }
 
     contains(particle, canvas) {
@@ -166,7 +175,7 @@ export class Circle {
         return distanceSquared < this.radius * this.radius;
     }
 
-    draw(ctx) {
+    draw(ctx) { //Debugging-Werkzeug
         ctx.strokeStyle = 'green';
         ctx.lineWidth = 1; 
         ctx.beginPath();

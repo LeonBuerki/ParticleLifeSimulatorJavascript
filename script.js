@@ -14,20 +14,21 @@ canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 
 var n = 1000; //Anzahl Partikel
-var dt = 0.01; //DeltaZeit zwischen Frames
+var dt = 0.01; //Deltazeit zwischen Frames
 var frictionHalfLife = 0.01; //Halbwertszeit der Reibung
 var rMax = 0.1; //Maximale Distanz, bei der noch eine Kraft ausgeübt wird
 
 var forceFactor = 20; //Verstärkungsfaktor der Kraft
 var frictionFactor = Math.pow(0.5, dt / frictionHalfLife); //Reibungsfaktor basierend auf Halbwertzeit
 
-var matrix = new Matrix(5, true); //Parameter 1 ist Anzahl Farben, Parameter 2 ist ob eine random Matrix gemacht werden soll
+var matrix = new Matrix(5, true); //1. Parameter ist Anzahl Farben, 2. Parameter gibt an, ob eine random Matrix gemacht werden soll
 createMatrixUserInterface(matrix.size, matrix.matrix); //matrix.matrix ist die Liste, in der die Matrix gespeichert ist
 
 let calculationMethod = 0; //0 = naive, 1 = querySquare, 2 = queryCircle
 
-let summedTime = 0;
-let framesPassed = 0;
+//Für Statistiken
+let summedTime = 0; //Zeit seit beginn der Simulation, wird mit "Reset Average Time Per Frame"-Button zurückgesetzt
+let framesPassed = 0; //Frames seit beginn der Simulation, wird mit "Reset Average Time Per Frame"-Button zurückgesetzt
 
 //Array für Partikel
 var particles = initializeParticles(n, matrix.size);
@@ -71,8 +72,7 @@ function loop() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
-    //Das ist für Debug
-    ////////////
+    //Das ist für Debug: Die Ranges des ersten Partikels (particles[0]) werden visualisiert
      let ranges = [];
 
     if (calculationMethod == 1) {
@@ -172,7 +172,7 @@ function loop() {
     }
 }
 
-    if (showQuadtree && quadTree) { //Wenn range existiert
+    if (showQuadtree && quadTree) { //Wenn Quadtree existiert
         quadTree.drawQuadrant(ctx);
         let found = [];
         ranges.forEach(range => {
@@ -191,7 +191,7 @@ function loop() {
         ctx.fill();
         });
     };
-    ///////////
+    //Debug fertig
 
     drawParticles(ctx, particles, canvas, matrix.size);
 
@@ -213,9 +213,9 @@ function loop() {
 requestAnimationFrame(loop);
 
 
-//Dies ist eine Funktion der Kräfteberechnung mit einer runtime von O(n^2)
+//Dies ist eine Funktion der Kräfteberechnung mit einer Zeitkomplexität von O(n^2)
 function naiveUpdateParticles() {
-    let distanceComputations = 0; //Zählt, wie oft die Distanz berechnet wird mit periodic boundaries
+    let distanceComputations = 0; //Zählt, wie oft die Distanz berechnet wird
     for (let i = 0; i < n; i++) {
         let totalForceX = 0;
         let totalForceY = 0;
@@ -230,14 +230,14 @@ function naiveUpdateParticles() {
             const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln
             distanceComputations += 1; 
             if (r > 0 && r < rMax) {
-                const f = force(r / rMax, matrix.matrix[particles[i].color][particles[j].color]);
+                const f = force(r / rMax, matrix.matrix[particles[i].color][particles[j].color]); //Skalierung der Distanz durch Division durch rMax
                 totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
                 totalForceY += (ry / r) * f;
 
             }
         }
 
-        //Skalierung
+        //Aufhebung der Skalierung
         totalForceX *= rMax * forceFactor;
         totalForceY *= rMax * forceFactor;
 
@@ -248,7 +248,7 @@ function naiveUpdateParticles() {
     return distanceComputations;
 }
 
-function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
+function queryUpdateParticles(quadTree) {
     let distanceComputations = 0; 
     let rangeCount = 0;
 
@@ -263,51 +263,50 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
         rangeCount++;
             
-            ///////////////////
-        if (particles[i].positionX < rMax) { //linke boundary
+        if (particles[i].positionX < rMax) { //linke boundary geschnitten -> zusätzliche Range rechts
         ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
             rangeCount++;
         }
 
-        else if (particles[i].positionX > 1 - rMax) { //rechte boundary
+        else if (particles[i].positionX > 1 - rMax) { //rechte boundary geschnitten -> zusätzliche Range links
         ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
             rangeCount++;
         }
 
-        if (particles[i].positionY < rMax) { //obere boundary
+        if (particles[i].positionY < rMax) { //obere boundary geschnitten -> zusätzliche Range unten
         ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
             rangeCount++;
         }
 
-        else if (particles[i].positionY > 1 - rMax) { //untere boundary
+        else if (particles[i].positionY > 1 - rMax) { //untere boundary geschnitten -> zusätzliche Range oben
         ranges.push(new Square(particles[i].positionX * canvasWidth - rMax * canvasWidth, 
                             -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 2 * rMax * canvasWidth));
             rangeCount++;
         }
         //Ecken
-        if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //oben links
-            ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //Dann muss unten rechts noch eine Range sein
+        if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //Partikel oben links
+            ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //unten rechts noch eine Range hinzufügen
                                 canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
             rangeCount++;
         }
-        if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //oben rechts
-            ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth,  //noch unten links
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //Partikel oben rechts
+            ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth,  //unten links noch eine Range hinzufügen
                                 canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
             rangeCount++;
         }
-        if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //unten links
-            ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben rechts
+        if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //Partikel unten links
+            ranges.push(new Square(canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben rechts noch eine Range hinzufügen
                                 -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
             rangeCount++;
         }
-        if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //unten rechts
-            ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben links
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //Partikel unten rechts
+            ranges.push(new Square(-canvasWidth + particles[i].positionX * canvasWidth - rMax * canvasWidth, //oben links noch eine Rane hinzufügen
                                 -canvasHeight + particles[i].positionY * canvasHeight - rMax * canvasHeight, 
                                 2 * rMax * canvasWidth));
             rangeCount++;
@@ -347,36 +346,35 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
         }
 
         //Ecken
-        if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //oben links
-            ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //Dann muss unten rechts noch eine Range sein
+        if (particles[i].positionX < rMax && particles[i].positionY < rMax) { //Partikel oben links
+            ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //Range unten rechts
                                 canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
             rangeCount++;
         }
-        if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //oben rechts
-            ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth,  //noch unten links
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY < rMax) { //Partikel oben rechts
+            ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth,  //Range unten links
                                 canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
             rangeCount++;
         }
-        if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //unten links
-            ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //oben rechts
+        if (particles[i].positionX < rMax && particles[i].positionY > 1 - rMax) { //Partikel unten links
+            ranges.push(new Circle(canvasWidth + particles[i].positionX * canvasWidth, //Range oben rechts
                                 -canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
             rangeCount++;
         }
-        if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //unten rechts
-            ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth, //oben links
+        if (particles[i].positionX > 1 - rMax && particles[i].positionY > 1 - rMax) { //Partikel unten rechts
+            ranges.push(new Circle(-canvasWidth + particles[i].positionX * canvasWidth, //Range oben links
                                 -canvasHeight + particles[i].positionY * canvasHeight, 
                                 rMax * canvasWidth));
             rangeCount++;
         }
         }
-
 
         let found = [];
         ranges.forEach(range => {
-            found = found.concat(quadTree.query(range, [], canvas));
+            found = found.concat(quadTree.query(range, [], canvas)); //Query-Methode auf alle Ranges anwenden und alle gefundenen Partikel der Liste found hinzufügen
         });
 
         found.forEach(particle => {
@@ -387,14 +385,13 @@ function queryUpdateParticles(quadTree) { //Mit Periodic boundaries!
             const r = Math.hypot(rx, ry); //Abstand zwischen den Partikeln
             distanceComputations += 1; 
             if (r > 0 && r < rMax) {
-            const f = force(r / rMax, matrix.matrix[particles[i].color][particle.color]);
+            const f = force(r / rMax, matrix.matrix[particles[i].color][particle.color]); 
             totalForceX += (rx / r) * f; //Kraft f (Skalar) wird mit dem Richtungsvektor (rx / r) multipliziert und dann der totalforceX addiert
             totalForceY += (ry / r) * f;
             }
 
         });
         
-         //Skalierung
         totalForceX *= rMax * forceFactor;
         totalForceY *= rMax * forceFactor;
 

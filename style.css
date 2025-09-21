@@ -21,7 +21,6 @@ main {
  margin-bottom: 80px; /* Abstand zu den restlichen User-tools*/
 }
 
-
 #matrix-container input {
   width: 40px;
   height: 40px;
@@ -36,16 +35,13 @@ main {
   height: 40px;
 }
 
-#user-tools-container {
-  gap: 60px; /* Abstand zwischen Matrix Elementen und dem Rest */
-  margin-top: 30px;
-}
-
-#set-random-position-button {
-  height: 30px;
-}
-
 #user-tools-parameters {
   margin-top: 60px;
 
+}
+
+#my-canvas {
+  width: 800px;
+  height: 800px;
+  flex-shrink: 0; /* Verhindert, dass Flexbox den Canvas zusammendrückt */
 }

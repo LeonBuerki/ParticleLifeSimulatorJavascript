@@ -26,9 +26,9 @@ export class Particle {
         this.velocityY += totalForceY * dt;
     }
 
-    transitionPosition(position) { //Macht, dass position zwischen 0 und 1 bleibt, also auf dem Screen
-        if (position < 0) return position + 1; // Links / oben raus -> rechts / unten wieder rein
-        if (position > 1) return position - 1; // Rechts / unten raus -> links / oben wieder rein
+    transitionPosition(position) { //Macht, dass position zwischen 0 und 1 bleibt -> Partikel bleibt immer auf Canvas
+        if (position < 0) return position + 1; // Links oder oben raus -> rechts resp. unten wieder rein
+        if (position > 1) return position - 1; // Rechts oder unten raus -> links resp. oben wieder rein
         return position; //Keine Veränderung
     }
 
@@ -53,9 +53,13 @@ export function drawParticles(ctx, particles, canvas, m) {
     //Zeichnen der Partikel
     particles.forEach(particle => {
         ctx.beginPath();
-        const screenX = particle.positionX * canvas.width;
+        const screenX = particle.positionX * canvas.width; //Skalierung der Partikelposition (zwischen 0 und 1) auf Canvasgrösse (hier zwischen 0 und 800)
         const screenY = particle.positionY * canvas.height;
         ctx.arc(screenX, screenY, 1, 0, 2 * Math.PI);
+        //Füllfarbe wird mit HSL eingestellt: 
+        // Farbton wird bestimmt durch particle.color / Anzahl Farben * 360 (so ergibt sich ein wert zwischen 0 und 360)
+        //Sättigung 100%
+        //Helligkeit 50%
         ctx.fillStyle = `hsl(${360 * (particle.color / m)}, 100%, 50%)`;
         ctx.fill();
     });
@@ -76,18 +80,18 @@ export function initializeParticles(n, m) {
     return particles;
 }
 
-export function setRandomParticlePositions(particles) { //Stellt auch die Geschwindigkeiten der Partikel wieder auf 0
+export function setRandomParticlePositions(particles) { 
     particles.forEach(particle => {
     particle.positionX = Math.random(); //Zufällige Positionen
     particle.positionY = Math.random();
-    particle.velocityX = 0;
+    particle.velocityX = 0; //Stellt auch die Geschwindigkeiten der Partikel wieder auf 0
     particle.velocityY = 0;
     });
 }
 
 //Berechnung der Kraft abhängig vom Abstand r und dem Anziehungsfaktor a
 export function force(r, a) {
-    const equilibrium = 0.2; //equilibrium = Der Punkt, bei dem die Kraft im Gleichgewicht ist also f = 0 zwischen abstossend und anziehend
+    const equilibrium = 0.2; //equilibrium = Der Punkt, bei dem die Kraft im Gleichgewicht ist, also resultierende Kraft = 0 
     if (r < equilibrium) { //abstossend
         return r / equilibrium - 1;
     } else if (equilibrium < r && r < 1) {
